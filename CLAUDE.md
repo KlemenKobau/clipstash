@@ -58,3 +58,13 @@ cargo leptos watch
 # Run tests
 cargo test --workspace
 ```
+
+## General
+
+1. Use AskUserQuestions, nothing should be ambiguous
+2. Make frequent commits and have meaningful descriptions. Use Conventional Commits
+3. Use only trusted crates
+4. Add small features and add tests for these features
+   1. Testing policy: high value tests only
+5. Use KISS, YAGNI and SOLID principles”
+6. Track a todo in TODO.md

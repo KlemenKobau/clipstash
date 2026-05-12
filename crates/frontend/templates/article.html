@@ -1,0 +1,27 @@
+{% extends "base.html" %}
+
+{% block title %}{{ article.title }} - Clipstash{% endblock %}
+
+{% block content %}
+<article class="reader">
+    <header>
+        <h1>{{ article.title }}</h1>
+        <div class="meta">
+            <a href="{{ article.url }}" target="_blank" rel="noopener">{{ article.domain }}</a>
+            <span class="date">{{ article.created_at.format("%Y-%m-%d") }}</span>
+        </div>
+        <div class="tags">
+            {% for t in article.tags %}
+            <a href="/?tag={{ t }}" class="tag">{{ t }}</a>
+            {% endfor %}
+        </div>
+        <div class="actions">
+            <a href="/">Back</a>
+            <form method="post" action="/article/{{ article.id }}/delete" style="display:inline">
+                <button type="submit" class="delete-btn">Delete</button>
+            </form>
+        </div>
+    </header>
+    <div class="content">{{ article.content|safe }}</div>
+</article>
+{% endblock %}

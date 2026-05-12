@@ -1,0 +1,11 @@
+[package]
+name = "clipstash-frontend"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+clipstash-shared = { path = "../shared" }
+serde = { workspace = true }
+chrono = { workspace = true }
+uuid = { workspace = true }
+askama = "0.13"

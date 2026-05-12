@@ -1,0 +1,11 @@
+{% extends "base.html" %}
+
+{% block title %}Error - Clipstash{% endblock %}
+
+{% block content %}
+<div class="error-page">
+    <h2>Something went wrong</h2>
+    <p class="error">{{ message }}</p>
+    <a href="/">Back to list</a>
+</div>
+{% endblock %}

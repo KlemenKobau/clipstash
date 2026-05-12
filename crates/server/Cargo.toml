@@ -1,0 +1,23 @@
+[package]
+name = "clipstash-server"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+clipstash-shared = { path = "../shared" }
+clipstash-frontend = { path = "../frontend" }
+axum = { workspace = true }
+tokio = { workspace = true }
+sqlx = { workspace = true }
+reqwest = { workspace = true }
+serde = { workspace = true }
+serde_json = { workspace = true }
+chrono = { workspace = true }
+uuid = { workspace = true }
+thiserror = { workspace = true }
+readability = "0.3"
+scraper = "0.22"
+tower-http = { version = "0.6", features = ["fs"] }
+url = "2"
+anyhow = "1"
+askama = "0.13"

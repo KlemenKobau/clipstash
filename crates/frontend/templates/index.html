@@ -1,0 +1,44 @@
+{% extends "base.html" %}
+
+{% block title %}Clipstash - Your Reading List{% endblock %}
+
+{% block content %}
+<form class="clip-form" method="post" action="/clip">
+    <input type="url" name="url" placeholder="Paste a URL to clip..." required />
+    <input type="text" name="tags" placeholder="Tags (comma-separated)" />
+    <button type="submit">Clip</button>
+</form>
+
+{% if let Some(msg) = error %}
+<div class="flash error">{{ msg }}</div>
+{% endif %}
+
+{% if let Some(msg) = success %}
+<div class="flash success">{{ msg }}</div>
+{% endif %}
+
+<form class="search-form" method="get" action="/">
+    <input type="search" name="q" placeholder="Search articles..." value="{{ search }}" />
+</form>
+
+{% if articles.is_empty() %}
+<p class="empty">No articles yet. Clip your first URL above!</p>
+{% else %}
+<ul class="article-list">
+    {% for a in articles %}
+    <li class="article-card">
+        <a href="/article/{{ a.id }}">
+            <h3>{{ a.title }}</h3>
+            <span class="domain">{{ a.domain }}</span>
+        </a>
+        <p class="excerpt">{{ a.excerpt }}</p>
+        <div class="tags">
+            {% for t in a.tags %}
+            <a href="/?tag={{ t }}" class="tag">{{ t }}</a>
+            {% endfor %}
+        </div>
+    </li>
+    {% endfor %}
+</ul>
+{% endif %}
+{% endblock %}
