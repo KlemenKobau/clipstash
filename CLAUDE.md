@@ -8,13 +8,13 @@ Organize with tags and search across all saved articles.
 
 ## Tech Stack
 
-- **Frontend:** Leptos (SSR + client-side hydration)
-- **Backend:** Axum (HTTP server, API routes)
-- **Database:** SQLite via `rusqlite` or `sqlx`
-- **HTML Parsing:** `readability` / `scraper` crates for content extraction
+- **Frontend:** Askama templates (server-rendered HTML)
+- **Backend:** Axum (HTML pages + JSON API)
+- **Database:** SQLite via `sqlx`
+- **HTML Parsing:** `readability` + `scraper` crates for content extraction
 - **HTTP Client:** `reqwest` for fetching URLs
 - **Full-text Search:** SQLite FTS5
-- **Workspace:** Cargo workspace with separate crates for frontend, backend, and shared types
+- **Workspace:** Cargo workspace with `server`, `frontend`, `shared` crates
 
 ## Architecture
 
@@ -22,21 +22,21 @@ Organize with tags and search across all saved articles.
 clipstash/
 ├── Cargo.toml              # Workspace root
 ├── crates/
-│   ├── server/             # Axum backend + Leptos SSR
-│   ├── frontend/           # Leptos components & pages
-│   └── shared/             # Shared types, models, validation
+│   ├── server/             # Axum backend (API + HTML pages)
+│   ├── frontend/           # Askama templates
+│   └── shared/             # Shared types, models, errors
 ├── migrations/             # SQLite migrations
-├── static/                 # Static assets (CSS, icons)
+├── static/                 # Static assets (CSS)
 └── CLAUDE.md
 ```
 
 ## Conventions
 
 - Use `thiserror` for error types, `anyhow` only at binary boundaries
-- Prefer `sqlx` with compile-time checked queries when possible
-- Keep Leptos components small and focused
-- Use server functions (`#[server]`) for client→server communication
+- Prefer `sqlx` for database access
+- Keep templates small and focused
 - Name database models with a `Db` prefix (e.g., `DbArticle`), API types without
+- HTML pages served at `/`, `/article/{id}`; JSON API at `/api/articles`
 
 ## MVP Features
 
@@ -49,11 +49,8 @@ clipstash/
 ## Development
 
 ```sh
-# Install trunk + cargo-leptos if needed
-cargo install cargo-leptos
-
-# Run dev server
-cargo leptos watch
+# Run server (http://localhost:3000)
+cargo run -p clipstash-server
 
 # Run tests
 cargo test --workspace
@@ -68,3 +65,4 @@ cargo test --workspace
    1. Testing policy: high value tests only
 5. Use KISS, YAGNI and SOLID principles”
 6. Track a todo in TODO.md
+7. Keep CLAUDE.md up to date, but keep it short and compact
