@@ -199,12 +199,12 @@ mod tests {
     #[test]
     fn extracts_keywords_from_description() {
         let html = r#"<html><head>
-            <meta name="description" content="A specification for adding human and machine readable meaning to commit messages">
+            <meta name="description" content="A guide for building fast and reliable web servers">
         </head><body></body></html>"#;
         let tags = extract_meta_tags(html);
         assert!(!tags.is_empty());
-        assert!(tags.contains(&"specification".to_string()));
-        assert!(tags.contains(&"human".to_string()));
+        assert!(tags.contains(&"guide".to_string()));
+        assert!(tags.contains(&"building".to_string()));
     }
 
     #[test]
