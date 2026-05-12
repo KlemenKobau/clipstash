@@ -38,11 +38,56 @@ pub fn extract_meta_tags(html: &str) -> Vec<String> {
         }
     }
 
+    // Extract from <meta name="description"> — split into candidate words
+    if let Some(sel) = scraper::Selector::parse(r#"meta[name="description"]"#).ok() {
+        for el in document.select(&sel) {
+            if let Some(content) = el.value().attr("content") {
+                tags.extend(extract_keywords_from_text(content));
+            }
+        }
+    }
+
+    // Extract from og:description as fallback
+    if tags.is_empty() {
+        if let Some(sel) =
+            scraper::Selector::parse(r#"meta[property="og:description"]"#).ok()
+        {
+            for el in document.select(&sel) {
+                if let Some(content) = el.value().attr("content") {
+                    tags.extend(extract_keywords_from_text(content));
+                }
+            }
+        }
+    }
+
     // Deduplicate while preserving order
     let mut seen = std::collections::HashSet::new();
     tags.retain(|t| seen.insert(t.clone()));
 
     tags
+}
+
+/// Extract candidate keywords from a description string.
+/// Filters stop words and short/numeric tokens, returns up to 5 terms.
+fn extract_keywords_from_text(text: &str) -> Vec<String> {
+    const STOP_WORDS: &[&str] = &[
+        "a", "an", "and", "are", "as", "at", "be", "by", "for", "from", "has", "he",
+        "in", "is", "it", "its", "of", "on", "or", "that", "the", "to", "was", "were",
+        "will", "with", "this", "but", "they", "have", "had", "what", "when", "where",
+        "who", "which", "how", "not", "no", "can", "do", "does", "did", "your", "you",
+        "we", "our", "their", "been", "being", "would", "could", "should", "may",
+        "might", "shall", "about", "into", "through", "during", "before", "after",
+        "above", "below", "between", "each", "all", "both", "few", "more", "most",
+        "other", "some", "such", "than", "too", "very", "just", "also",
+    ];
+
+    let stop: std::collections::HashSet<&str> = STOP_WORDS.iter().copied().collect();
+
+    text.split(|c: char| !c.is_alphanumeric() && c != '-')
+        .map(|w| w.trim().to_lowercase())
+        .filter(|w| w.len() >= 3 && !stop.contains(w.as_str()) && !w.chars().all(|c| c.is_numeric()))
+        .take(5)
+        .collect()
 }
 
 /// Match article text against existing user tags.
@@ -149,6 +194,25 @@ mod tests {
         let html = "<html><head></head><body></body></html>";
         let tags = extract_meta_tags(html);
         assert!(tags.is_empty());
+    }
+
+    #[test]
+    fn extracts_keywords_from_description() {
+        let html = r#"<html><head>
+            <meta name="description" content="A specification for adding human and machine readable meaning to commit messages">
+        </head><body></body></html>"#;
+        let tags = extract_meta_tags(html);
+        assert!(!tags.is_empty());
+        assert!(tags.contains(&"specification".to_string()));
+        assert!(tags.contains(&"human".to_string()));
+    }
+
+    #[test]
+    fn extract_keywords_filters_stop_words() {
+        let result = extract_keywords_from_text("the quick brown fox and the lazy dog");
+        assert!(!result.contains(&"the".to_string()));
+        assert!(!result.contains(&"and".to_string()));
+        assert!(result.contains(&"quick".to_string()));
     }
 
     #[test]
