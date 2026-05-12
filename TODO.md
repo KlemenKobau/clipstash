@@ -1,5 +1,11 @@
 # TODO
 
+## Done
+
+- [x] Infer tag suggestions from HTML meta tags (og:tags, article:tag, keywords)
+- [x] Suggest tags from user's existing tag vocabulary based on article content
+- [x] Pre-fill suggested tags in the clip form
+
 ## Next Up
 
 - [x] Add tests for article extraction and database operations
@@ -9,6 +15,7 @@
 
 ## Future Enhancements
 
+- [ ] Keyword/TF-IDF extraction for tag inference (e.g. rake crate)
 - [ ] Tag management UI (edit/remove tags from article view)
 - [ ] Offline/fallback content for failed fetches
 - [ ] Export articles (Markdown, PDF)

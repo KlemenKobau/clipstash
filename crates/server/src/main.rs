@@ -34,6 +34,7 @@ async fn main() -> anyhow::Result<()> {
     // HTML page routes
     let page_routes = Router::new()
         .route("/", routing::get(clipstash_server::pages::index))
+        .route("/preview-clip", routing::post(clipstash_server::pages::preview_clip))
         .route("/clip", routing::post(clipstash_server::pages::clip_article))
         .route("/article/{id}", routing::get(clipstash_server::pages::view_article))
         .route("/article/{id}/delete", routing::post(clipstash_server::pages::delete_article));

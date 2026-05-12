@@ -3,9 +3,8 @@
 {% block title %}Clipstash - Your Reading List{% endblock %}
 
 {% block content %}
-<form class="clip-form" method="post" action="/clip">
+<form class="clip-form" method="post" action="/preview-clip">
     <input type="url" name="url" placeholder="Paste a URL to clip..." required />
-    <input type="text" name="tags" placeholder="Tags (comma-separated)" />
     <button type="submit">Clip</button>
 </form>
 

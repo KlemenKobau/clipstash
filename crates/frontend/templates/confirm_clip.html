@@ -1,0 +1,25 @@
+{% extends "base.html" %}
+
+{% block title %}Confirm Clip - Clipstash{% endblock %}
+
+{% block content %}
+<div class="confirm-clip">
+    <h2>Confirm Clip</h2>
+
+    <div class="preview-card">
+        <h3>{{ title }}</h3>
+        <span class="domain">{{ domain }}</span>
+        <p class="excerpt">{{ excerpt }}</p>
+    </div>
+
+    <form method="post" action="/clip">
+        <input type="hidden" name="url" value="{{ url }}" />
+        <label for="tags">Tags (edit before saving):</label>
+        <input type="text" name="tags" id="tags" value="{{ suggested_tags }}" placeholder="Tags (comma-separated)" />
+        <div class="form-actions">
+            <a href="/" class="btn-secondary">Cancel</a>
+            <button type="submit">Save Article</button>
+        </div>
+    </form>
+</div>
+{% endblock %}
