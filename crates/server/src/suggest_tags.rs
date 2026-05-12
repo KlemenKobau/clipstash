@@ -17,7 +17,7 @@ pub fn extract_meta_tags(html: &str) -> Vec<String> {
         }
     }
 
-    // meta name="news_keywords" — comma-separated (AP, Reuters style)
+    // meta name="news_keywords" — comma-separated
     if let Some(sel) = scraper::Selector::parse(r#"meta[name="news_keywords"]"#).ok() {
         for el in document.select(&sel) {
             if let Some(content) = el.value().attr("content") {
