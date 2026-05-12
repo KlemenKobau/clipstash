@@ -54,7 +54,7 @@ pub async fn fetch_and_extract(url: &str, tags: Vec<String>) -> Result<Article, 
     })
 }
 
-fn extract_title_from_html(html: &str) -> Option<String> {
+pub(crate) fn extract_title_from_html(html: &str) -> Option<String> {
     let document = scraper::Html::parse_document(html);
     let selector = scraper::Selector::parse("title").ok()?;
     document
@@ -62,4 +62,39 @@ fn extract_title_from_html(html: &str) -> Option<String> {
         .next()
         .map(|el| el.text().collect::<String>().trim().to_string())
         .filter(|t| !t.is_empty())
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn extracts_title_from_valid_html() {
+        let html = "<html><head><title>My Article</title></head><body></body></html>";
+        assert_eq!(
+            extract_title_from_html(html),
+            Some("My Article".to_string())
+        );
+    }
+
+    #[test]
+    fn returns_none_when_no_title_tag() {
+        let html = "<html><head></head><body><p>Hello</p></body></html>";
+        assert_eq!(extract_title_from_html(html), None);
+    }
+
+    #[test]
+    fn returns_none_for_empty_title() {
+        let html = "<html><head><title>   </title></head><body></body></html>";
+        assert_eq!(extract_title_from_html(html), None);
+    }
+
+    #[test]
+    fn trims_whitespace_from_title() {
+        let html = "<html><head><title>  Padded Title  </title></head><body></body></html>";
+        assert_eq!(
+            extract_title_from_html(html),
+            Some("Padded Title".to_string())
+        );
+    }
 }

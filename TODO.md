@@ -2,7 +2,7 @@
 
 ## Next Up
 
-- [ ] Add tests for article extraction and database operations
+- [x] Add tests for article extraction and database operations
 - [ ] Add input validation (URL format, tag length limits)
 - [ ] Handle duplicate URL submissions gracefully
 - [ ] Add pagination to article list

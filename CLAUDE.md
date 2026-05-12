@@ -66,3 +66,4 @@ cargo test --workspace
 5. Use KISS, YAGNI and SOLID principles”
 6. Track a todo in TODO.md
 7. Keep CLAUDE.md up to date, but keep it short and compact
+8. Create a README.md and keep it up to date
