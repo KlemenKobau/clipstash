@@ -36,14 +36,14 @@ clipstash/
 - Prefer `sqlx` for database access
 - Keep templates small and focused
 - Name database models with a `Db` prefix (e.g., `DbArticle`), API types without
-- HTML pages served at `/`, `/article/{id}`; JSON API at `/api/articles`
+- HTML pages served at `/`, `/preview-clip`, `/clip`, `/article/{id}`; JSON API at `/api/articles`
 
-## MVP Features
+## Features
 
 1. Paste a URL → fetch & parse readable article content
 2. Save articles with metadata (title, domain, date, excerpt)
-3. Tag articles
-4. Full-text search across saved content
+3. Tag articles with auto-suggestions (HTML meta tags + existing vocabulary matching)
+4. Full-text search across saved content (FTS5)
 5. Clean, minimal reader UI
 
 ## Development
