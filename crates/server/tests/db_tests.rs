@@ -159,15 +159,76 @@ async fn full_text_search_matches_partial_prefix() {
     db::insert_article(&pool, &a1).await.unwrap();
     db::insert_article(&pool, &a2).await.unwrap();
 
-    // "Prog" should match "Programming"
     let results = db::search_articles(&pool, "Prog").await.unwrap();
     assert_eq!(results.len(), 1);
     assert_eq!(results[0].title, "Rust Programming");
 
-    // "Coo" should match "Cooking"
     let results = db::search_articles(&pool, "Coo").await.unwrap();
     assert_eq!(results.len(), 1);
     assert_eq!(results[0].title, "Cooking Recipes");
+}
+
+#[tokio::test]
+async fn full_text_search_implicit_and_for_multiple_words() {
+    let pool = setup_db().await;
+
+    let a1 = make_article("https://example.com/1", "Rust Programming", vec![]);
+    let a2 = make_article("https://example.com/2", "Rust Cooking", vec![]);
+    db::insert_article(&pool, &a1).await.unwrap();
+    db::insert_article(&pool, &a2).await.unwrap();
+
+    // Both words must appear
+    let results = db::search_articles(&pool, "Rust Programming")
+        .await
+        .unwrap();
+    assert_eq!(results.len(), 1);
+    assert_eq!(results[0].title, "Rust Programming");
+}
+
+#[tokio::test]
+async fn full_text_search_explicit_or() {
+    let pool = setup_db().await;
+
+    let a1 = make_article("https://example.com/1", "Rust Programming", vec![]);
+    let a2 = make_article("https://example.com/2", "Cooking Recipes", vec![]);
+    let a3 = make_article("https://example.com/3", "Go Programming", vec![]);
+    db::insert_article(&pool, &a1).await.unwrap();
+    db::insert_article(&pool, &a2).await.unwrap();
+    db::insert_article(&pool, &a3).await.unwrap();
+
+    let results = db::search_articles(&pool, "Rust OR Cooking").await.unwrap();
+    assert_eq!(results.len(), 2);
+}
+
+#[tokio::test]
+async fn full_text_search_exclude_word() {
+    let pool = setup_db().await;
+
+    let a1 = make_article("https://example.com/1", "Rust Programming", vec![]);
+    let a2 = make_article("https://example.com/2", "Rust Cooking", vec![]);
+    db::insert_article(&pool, &a1).await.unwrap();
+    db::insert_article(&pool, &a2).await.unwrap();
+
+    // Rust articles excluding those with "Cooking"
+    let results = db::search_articles(&pool, "Rust -Cooking").await.unwrap();
+    assert_eq!(results.len(), 1);
+    assert_eq!(results[0].title, "Rust Programming");
+}
+
+#[tokio::test]
+async fn full_text_search_rejects_fts5_injection() {
+    let pool = setup_db().await;
+
+    let a1 = make_article("https://example.com/1", "Rust Programming", vec![]);
+    db::insert_article(&pool, &a1).await.unwrap();
+
+    // Attempts to inject FTS5 column filter syntax — should not error, just return no results
+    // (special chars stripped, leaving empty or harmless token)
+    let result = db::search_articles(&pool, "title:Rust").await;
+    assert!(result.is_ok());
+
+    let result = db::search_articles(&pool, "NEAR(Rust Programming)").await;
+    assert!(result.is_ok());
 }
 
 #[tokio::test]

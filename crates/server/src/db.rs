@@ -80,16 +80,114 @@ pub async fn list_articles(pool: &SqlitePool) -> Result<Vec<ArticleSummary>, Cli
     Ok(articles)
 }
 
+/// Tokens produced by parsing the user query.
+#[derive(Debug, PartialEq)]
+enum QueryToken {
+    Include(String), // plain word  → `word*`
+    Exclude(String), // -word       → `NOT word*`
+    And,
+    Or,
+}
+
+/// Translate a user-facing search query into a safe FTS5 MATCH expression.
+///
+/// Supported syntax:
+///   - Plain words  → prefix match (`rust` → `rust*`)
+///   - `-word`      → exclude (`-rust` → `NOT rust*`)
+///   - `AND` / `OR` → passed through as FTS5 boolean operators
+///
+/// Multiple plain words are implicitly AND-ed. Everything else (column
+/// filters, NEAR, parentheses, quotes, etc.) is stripped so users cannot
+/// inject arbitrary FTS5 syntax. The resulting string is passed as a bound
+/// parameter and is never interpolated into the SQL statement itself.
+fn build_fts5_query(query: &str) -> String {
+    let mut tokens: Vec<QueryToken> = Vec::new();
+
+    for raw in query.split_whitespace() {
+        match raw {
+            "AND" => tokens.push(QueryToken::And),
+            "OR" => tokens.push(QueryToken::Or),
+            t if t.starts_with('-') => {
+                let word = sanitize_fts5_term(&t[1..]);
+                if !word.is_empty() {
+                    tokens.push(QueryToken::Exclude(word));
+                }
+            }
+            t => {
+                let word = sanitize_fts5_term(t);
+                if !word.is_empty() {
+                    tokens.push(QueryToken::Include(word));
+                }
+            }
+        }
+    }
+
+    // Drop leading/trailing AND/OR
+    while matches!(tokens.first(), Some(QueryToken::And) | Some(QueryToken::Or)) {
+        tokens.remove(0);
+    }
+    while matches!(tokens.last(), Some(QueryToken::And) | Some(QueryToken::Or)) {
+        tokens.pop();
+    }
+
+    if tokens.is_empty() {
+        return String::new();
+    }
+
+    // Build the FTS5 expression.
+    // FTS5 binary operators: `a AND b`, `a OR b`, `a NOT b`
+    // Exclusions must be binary: the preceding term NOT excluded_term.
+    // Implicit AND is inserted between adjacent include terms.
+    let mut out = String::new();
+    let mut need_op = false; // whether the next term needs a preceding operator
+
+    for token in &tokens {
+        match token {
+            QueryToken::And => {
+                out.push_str(" AND");
+                need_op = false;
+            }
+            QueryToken::Or => {
+                out.push_str(" OR");
+                need_op = false;
+            }
+            QueryToken::Include(word) => {
+                if need_op {
+                    out.push_str(" AND");
+                }
+                out.push_str(&format!(" {word}*"));
+                need_op = true;
+            }
+            QueryToken::Exclude(word) => {
+                // `NOT` is binary in FTS5: requires a left-hand term.
+                // If there's nothing to the left yet, skip the exclusion.
+                if need_op {
+                    out.push_str(&format!(" NOT {word}*"));
+                    // need_op stays true; next term still needs an operator
+                }
+            }
+        }
+    }
+
+    out.trim().to_string()
+}
+
+/// Strip characters that have special meaning in FTS5 term syntax.
+/// Keeps only alphanumeric characters and underscores.
+fn sanitize_fts5_term(term: &str) -> String {
+    term.chars()
+        .filter(|c| c.is_alphanumeric() || *c == '_')
+        .collect()
+}
+
 pub async fn search_articles(
     pool: &SqlitePool,
     query: &str,
 ) -> Result<Vec<ArticleSummary>, ClipstashError> {
-    // Append * to each token for prefix matching (supports partial/as-you-type search)
-    let prefix_query = query
-        .split_whitespace()
-        .map(|token| format!("{token}*"))
-        .collect::<Vec<_>>()
-        .join(" ");
+    let fts_query = build_fts5_query(query);
+    if fts_query.is_empty() {
+        return Ok(Vec::new());
+    }
     let rows = sqlx::query_as::<_, DbArticleSummary>(
         "SELECT a.id, a.url, a.title, a.domain, a.excerpt, a.created_at
          FROM articles a
@@ -97,7 +195,7 @@ pub async fn search_articles(
          WHERE articles_fts MATCH ?
          ORDER BY rank",
     )
-    .bind(prefix_query)
+    .bind(fts_query)
     .fetch_all(pool)
     .await
     .map_err(|e| ClipstashError::DatabaseError(e.to_string()))?;
