@@ -28,6 +28,9 @@ clipstash/
 ├── extension/              # Browser extension (Manifest V3, Chrome+Firefox)
 ├── migrations/             # SQLite migrations
 ├── static/                 # Static assets (CSS)
+├── .github/workflows/      # CI/CD (ci.yml + release.yml)
+├── Dockerfile              # Multi-stage container build
+├── docker-compose.yml      # Local container deployment
 └── CLAUDE.md
 ```
 
@@ -56,6 +59,9 @@ cargo run -p clipstash-server
 
 # Run tests
 cargo test --workspace
+
+# Run with Docker
+docker compose up -d
 ```
 
 ## General
@@ -70,3 +76,4 @@ cargo test --workspace
 7. Keep CLAUDE.md up to date, but keep it short and compact
 8. Keep the README.md up to date
 9. Check project security with `cargo audit`
+10. Always run `cargo fmt --all` before committing

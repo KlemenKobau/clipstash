@@ -1,6 +1,6 @@
+use chrono::Utc;
 use clipstash_shared::error::ClipstashError;
 use clipstash_shared::models::Article;
-use chrono::Utc;
 use uuid::Uuid;
 
 /// Intermediate result from fetching and parsing a URL, before tags are finalized.
@@ -25,17 +25,14 @@ pub async fn fetch_and_parse(url: &str) -> Result<ExtractedContent, ClipstashErr
         .await
         .map_err(|e| ClipstashError::FetchError(e.to_string()))?;
 
-    let parsed_url = url::Url::parse(url)
-        .map_err(|e| ClipstashError::InvalidInput(e.to_string()))?;
+    let parsed_url =
+        url::Url::parse(url).map_err(|e| ClipstashError::InvalidInput(e.to_string()))?;
 
     let mut html_bytes = html.as_bytes();
     let extracted = readability::extractor::extract(&mut html_bytes, &parsed_url)
         .map_err(|e| ClipstashError::ParseError(e.to_string()))?;
 
-    let domain = parsed_url
-        .host_str()
-        .unwrap_or("unknown")
-        .to_string();
+    let domain = parsed_url.host_str().unwrap_or("unknown").to_string();
 
     let title = if extracted.title.is_empty() {
         extract_title_from_html(&html).unwrap_or_else(|| domain.clone())

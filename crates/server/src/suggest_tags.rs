@@ -49,9 +49,7 @@ pub fn extract_meta_tags(html: &str) -> Vec<String> {
 
     // Extract from og:description as fallback
     if tags.is_empty() {
-        if let Some(sel) =
-            scraper::Selector::parse(r#"meta[property="og:description"]"#).ok()
-        {
+        if let Some(sel) = scraper::Selector::parse(r#"meta[property="og:description"]"#).ok() {
             for el in document.select(&sel) {
                 if let Some(content) = el.value().attr("content") {
                     tags.extend(extract_keywords_from_text(content));
@@ -71,13 +69,12 @@ pub fn extract_meta_tags(html: &str) -> Vec<String> {
 /// Filters stop words and short/numeric tokens, returns up to 5 terms.
 fn extract_keywords_from_text(text: &str) -> Vec<String> {
     const STOP_WORDS: &[&str] = &[
-        "a", "an", "and", "are", "as", "at", "be", "by", "for", "from", "has", "he",
-        "in", "is", "it", "its", "of", "on", "or", "that", "the", "to", "was", "were",
-        "will", "with", "this", "but", "they", "have", "had", "what", "when", "where",
-        "who", "which", "how", "not", "no", "can", "do", "does", "did", "your", "you",
-        "we", "our", "their", "been", "being", "would", "could", "should", "may",
-        "might", "shall", "about", "into", "through", "during", "before", "after",
-        "above", "below", "between", "each", "all", "both", "few", "more", "most",
+        "a", "an", "and", "are", "as", "at", "be", "by", "for", "from", "has", "he", "in", "is",
+        "it", "its", "of", "on", "or", "that", "the", "to", "was", "were", "will", "with", "this",
+        "but", "they", "have", "had", "what", "when", "where", "who", "which", "how", "not", "no",
+        "can", "do", "does", "did", "your", "you", "we", "our", "their", "been", "being", "would",
+        "could", "should", "may", "might", "shall", "about", "into", "through", "during", "before",
+        "after", "above", "below", "between", "each", "all", "both", "few", "more", "most",
         "other", "some", "such", "than", "too", "very", "just", "also",
     ];
 
@@ -85,7 +82,9 @@ fn extract_keywords_from_text(text: &str) -> Vec<String> {
 
     text.split(|c: char| !c.is_alphanumeric() && c != '-')
         .map(|w| w.trim().to_lowercase())
-        .filter(|w| w.len() >= 3 && !stop.contains(w.as_str()) && !w.chars().all(|c| c.is_numeric()))
+        .filter(|w| {
+            w.len() >= 3 && !stop.contains(w.as_str()) && !w.chars().all(|c| c.is_numeric())
+        })
         .take(5)
         .collect()
 }
@@ -101,32 +100,24 @@ pub fn match_existing_tags(text: &str, existing_tags: &[String]) -> Vec<String> 
             let tag_lower = tag.to_lowercase();
             // Check for whole-word match: the tag must appear surrounded by
             // non-alphanumeric chars (or at string boundaries)
-            text_lower
-                .match_indices(&tag_lower)
-                .any(|(pos, matched)| {
-                    let before_ok = pos == 0
-                        || !text_lower.as_bytes()[pos - 1].is_ascii_alphanumeric();
-                    let after_pos = pos + matched.len();
-                    let after_ok = after_pos >= text_lower.len()
-                        || !text_lower.as_bytes()[after_pos].is_ascii_alphanumeric();
-                    before_ok && after_ok
-                })
+            text_lower.match_indices(&tag_lower).any(|(pos, matched)| {
+                let before_ok = pos == 0 || !text_lower.as_bytes()[pos - 1].is_ascii_alphanumeric();
+                let after_pos = pos + matched.len();
+                let after_ok = after_pos >= text_lower.len()
+                    || !text_lower.as_bytes()[after_pos].is_ascii_alphanumeric();
+                before_ok && after_ok
+            })
         })
         .cloned()
         .collect()
 }
 
 /// Combine meta-tag extraction and vocabulary matching, deduplicating the results.
-pub async fn suggest_tags(
-    html: &str,
-    article_text: &str,
-    existing_tags: &[String],
-) -> Vec<String> {
+pub async fn suggest_tags(html: &str, article_text: &str, existing_tags: &[String]) -> Vec<String> {
     let mut suggestions = extract_meta_tags(html);
     let matched = match_existing_tags(article_text, existing_tags);
 
-    let mut seen: std::collections::HashSet<String> =
-        suggestions.iter().cloned().collect();
+    let mut seen: std::collections::HashSet<String> = suggestions.iter().cloned().collect();
     for tag in matched {
         if seen.insert(tag.clone()) {
             suggestions.push(tag);
@@ -140,12 +131,10 @@ pub async fn suggest_tags(
 pub async fn get_all_existing_tags(
     pool: &sqlx::sqlite::SqlitePool,
 ) -> Result<Vec<String>, ClipstashError> {
-    let tags = sqlx::query_scalar::<_, String>(
-        "SELECT DISTINCT name FROM tags ORDER BY name",
-    )
-    .fetch_all(pool)
-    .await
-    .map_err(|e| ClipstashError::DatabaseError(e.to_string()))?;
+    let tags = sqlx::query_scalar::<_, String>("SELECT DISTINCT name FROM tags ORDER BY name")
+        .fetch_all(pool)
+        .await
+        .map_err(|e| ClipstashError::DatabaseError(e.to_string()))?;
     Ok(tags)
 }
 

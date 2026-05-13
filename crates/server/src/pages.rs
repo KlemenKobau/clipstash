@@ -3,7 +3,9 @@ use axum::{
     extract::{Path, Query, State},
     response::{Html, IntoResponse, Redirect},
 };
-use clipstash_frontend::templates::{ArticleTemplate, ConfirmClipTemplate, ErrorTemplate, IndexTemplate};
+use clipstash_frontend::templates::{
+    ArticleTemplate, ConfirmClipTemplate, ErrorTemplate, IndexTemplate,
+};
 use clipstash_shared::models::SearchQuery;
 use serde::Deserialize;
 use sqlx::sqlite::SqlitePool;

@@ -13,10 +13,7 @@ pub async fn run_migrations(pool: &SqlitePool) -> Result<(), ClipstashError> {
     Ok(())
 }
 
-pub async fn insert_article(
-    pool: &SqlitePool,
-    article: &Article,
-) -> Result<(), ClipstashError> {
+pub async fn insert_article(pool: &SqlitePool, article: &Article) -> Result<(), ClipstashError> {
     let id = article.id.to_string();
     let created_at = article.created_at.to_rfc3339();
     let updated_at = article.updated_at.to_rfc3339();
@@ -182,13 +179,12 @@ pub async fn delete_article(pool: &SqlitePool, id: Uuid) -> Result<(), Clipstash
 }
 
 async fn get_tags(pool: &SqlitePool, article_id: &str) -> Result<Vec<String>, ClipstashError> {
-    let tags = sqlx::query_scalar::<_, String>(
-        "SELECT name FROM tags WHERE article_id = ? ORDER BY name",
-    )
-    .bind(article_id)
-    .fetch_all(pool)
-    .await
-    .map_err(|e| ClipstashError::DatabaseError(e.to_string()))?;
+    let tags =
+        sqlx::query_scalar::<_, String>("SELECT name FROM tags WHERE article_id = ? ORDER BY name")
+            .bind(article_id)
+            .fetch_all(pool)
+            .await
+            .map_err(|e| ClipstashError::DatabaseError(e.to_string()))?;
     Ok(tags)
 }
 
@@ -251,8 +247,7 @@ fn parse_datetime(s: &str) -> Result<DateTime<Utc>, ClipstashError> {
     DateTime::parse_from_rfc3339(s)
         .map(|dt| dt.with_timezone(&Utc))
         .or_else(|_| {
-            chrono::NaiveDateTime::parse_from_str(s, "%Y-%m-%d %H:%M:%S")
-                .map(|ndt| ndt.and_utc())
+            chrono::NaiveDateTime::parse_from_str(s, "%Y-%m-%d %H:%M:%S").map(|ndt| ndt.and_utc())
         })
         .map_err(|e| ClipstashError::DatabaseError(format!("Invalid datetime '{s}': {e}")))
 }

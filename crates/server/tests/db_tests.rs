@@ -1,7 +1,7 @@
 use chrono::Utc;
+use clipstash_server::db;
 use clipstash_shared::error::ClipstashError;
 use clipstash_shared::models::Article;
-use clipstash_server::db;
 use sqlx::sqlite::{SqlitePool, SqlitePoolOptions};
 use uuid::Uuid;
 
@@ -100,11 +100,7 @@ async fn delete_nonexistent_article_returns_not_found() {
 #[tokio::test]
 async fn update_tags_replaces_existing() {
     let pool = setup_db().await;
-    let article = make_article(
-        "https://example.com/1",
-        "Tagged",
-        vec!["old-tag".into()],
-    );
+    let article = make_article("https://example.com/1", "Tagged", vec!["old-tag".into()]);
     let id = article.id;
 
     db::insert_article(&pool, &article).await.unwrap();
@@ -113,7 +109,10 @@ async fn update_tags_replaces_existing() {
         .unwrap();
 
     let fetched = db::get_article(&pool, id).await.unwrap();
-    assert_eq!(fetched.tags, vec!["another".to_string(), "new-tag".to_string()]);
+    assert_eq!(
+        fetched.tags,
+        vec!["another".to_string(), "new-tag".to_string()]
+    );
 }
 
 #[tokio::test]
@@ -166,11 +165,10 @@ async fn delete_article_cascades_to_tags() {
     db::delete_article(&pool, id).await.unwrap();
 
     // Tags should be gone too (CASCADE)
-    let tag_count: i32 =
-        sqlx::query_scalar("SELECT COUNT(*) FROM tags WHERE article_id = ?")
-            .bind(id.to_string())
-            .fetch_one(&pool)
-            .await
-            .unwrap();
+    let tag_count: i32 = sqlx::query_scalar("SELECT COUNT(*) FROM tags WHERE article_id = ?")
+        .bind(id.to_string())
+        .fetch_one(&pool)
+        .await
+        .unwrap();
     assert_eq!(tag_count, 0);
 }

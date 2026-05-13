@@ -16,9 +16,7 @@ async fn main() -> anyhow::Result<()> {
     sqlx::query("PRAGMA journal_mode=WAL")
         .execute(&pool)
         .await?;
-    sqlx::query("PRAGMA foreign_keys=ON")
-        .execute(&pool)
-        .await?;
+    sqlx::query("PRAGMA foreign_keys=ON").execute(&pool).await?;
 
     clipstash_server::db::run_migrations(&pool)
         .await
@@ -37,20 +35,47 @@ async fn main() -> anyhow::Result<()> {
 
     // JSON API routes
     let api_routes = Router::new()
-        .route("/articles", routing::get(clipstash_server::routes::list_articles))
-        .route("/articles", routing::post(clipstash_server::routes::create_article))
-        .route("/articles/{id}", routing::get(clipstash_server::routes::get_article))
-        .route("/articles/{id}", routing::delete(clipstash_server::routes::delete_article))
-        .route("/articles/{id}/tags", routing::put(clipstash_server::routes::update_tags))
+        .route(
+            "/articles",
+            routing::get(clipstash_server::routes::list_articles),
+        )
+        .route(
+            "/articles",
+            routing::post(clipstash_server::routes::create_article),
+        )
+        .route(
+            "/articles/{id}",
+            routing::get(clipstash_server::routes::get_article),
+        )
+        .route(
+            "/articles/{id}",
+            routing::delete(clipstash_server::routes::delete_article),
+        )
+        .route(
+            "/articles/{id}/tags",
+            routing::put(clipstash_server::routes::update_tags),
+        )
         .layer(cors);
 
     // HTML page routes
     let page_routes = Router::new()
         .route("/", routing::get(clipstash_server::pages::index))
-        .route("/preview-clip", routing::post(clipstash_server::pages::preview_clip))
-        .route("/clip", routing::post(clipstash_server::pages::clip_article))
-        .route("/article/{id}", routing::get(clipstash_server::pages::view_article))
-        .route("/article/{id}/delete", routing::post(clipstash_server::pages::delete_article));
+        .route(
+            "/preview-clip",
+            routing::post(clipstash_server::pages::preview_clip),
+        )
+        .route(
+            "/clip",
+            routing::post(clipstash_server::pages::clip_article),
+        )
+        .route(
+            "/article/{id}",
+            routing::get(clipstash_server::pages::view_article),
+        )
+        .route(
+            "/article/{id}/delete",
+            routing::post(clipstash_server::pages::delete_article),
+        );
 
     let app = Router::new()
         .merge(page_routes)
