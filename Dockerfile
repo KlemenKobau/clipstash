@@ -22,8 +22,9 @@ RUN mkdir -p crates/server/src crates/frontend/src crates/shared/src && \
 COPY crates/ crates/
 COPY migrations/ migrations/
 
-# Touch main.rs to invalidate the cache for our code (not deps)
-RUN touch crates/server/src/main.rs && \
+# Touch source files to invalidate the cache for our code (not deps)
+RUN touch crates/server/src/main.rs crates/server/src/lib.rs \
+          crates/frontend/src/lib.rs crates/shared/src/lib.rs && \
     cargo build --release -p clipstash-server
 
 # Stage 2: Runtime
