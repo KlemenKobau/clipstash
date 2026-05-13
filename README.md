@@ -6,7 +6,7 @@ A self-hosted web article clipper built entirely in Rust. Paste a URL, and Clips
 
 - **Clip articles** — paste a URL and Clipstash extracts the title, domain, excerpt, and clean readable content
 - **Smart tag suggestions** — auto-suggests tags from HTML meta tags (`keywords`, `article:tag`) and matches against your existing tag vocabulary
-- **Full-text search** — search across all saved articles using SQLite FTS5
+- **Full-text search** — live as-you-type search with prefix matching, implicit AND for multiple words, and operators: `AND`, `OR`, `-word` (exclude)
 - **Tag filtering** — click any tag to filter your reading list
 - **Clean reader view** — distraction-free article reading with responsive typography
 - **JSON API** — full CRUD API at `/api/articles` for programmatic access
@@ -71,7 +71,17 @@ cargo test --workspace
 2. Paste a URL and click **Clip**
 3. Review the extracted article and suggested tags — edit tags if needed
 4. Click **Save Article** to add it to your library
-5. Use the search bar or click tags to find saved articles
+5. Use the search bar or click tags to find saved articles — results update live as you type
+
+### Search syntax
+
+| Query | Meaning |
+|-------|---------|
+| `rust web` | both words must appear (implicit AND) |
+| `rust OR go` | either word |
+| `rust AND web` | explicit AND |
+| `rust -cooking` | contains "rust", excludes "cooking" |
+| `prog` | prefix match — matches "programming", "progress", etc. |
 
 ## API
 
