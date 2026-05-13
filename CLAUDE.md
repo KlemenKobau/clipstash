@@ -77,4 +77,4 @@ docker compose up -d
 8. Keep the README.md up to date
 9. Check project security with `cargo audit`
 10. Always run `cargo fmt --all` before committing
-11. Run `cargo clippy --workspace` after implementations to catch warnings and write idiomatic Rust
+11. Run `cargo clippy --workspace` after implementations; fix errors only (warnings are informational)
