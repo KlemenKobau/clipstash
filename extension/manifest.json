@@ -1,0 +1,23 @@
+{
+  "manifest_version": 3,
+  "name": "Clipstash",
+  "version": "0.1.0",
+  "description": "Save web pages to your Clipstash instance with one click.",
+  "permissions": ["contextMenus", "storage", "notifications"],
+  "background": {
+    "service_worker": "background.js"
+  },
+  "options_ui": {
+    "page": "options.html",
+    "open_in_tab": false
+  },
+  "icons": {
+    "48": "icons/icon-48.svg",
+    "96": "icons/icon-96.svg"
+  },
+  "browser_specific_settings": {
+    "gecko": {
+      "id": "clipstash@clipstash"
+    }
+  }
+}

@@ -25,6 +25,7 @@ clipstash/
 │   ├── server/             # Axum backend (API + HTML pages)
 │   ├── frontend/           # Askama templates
 │   └── shared/             # Shared types, models, errors
+├── extension/              # Browser extension (Manifest V3, Chrome+Firefox)
 ├── migrations/             # SQLite migrations
 ├── static/                 # Static assets (CSS)
 └── CLAUDE.md
@@ -45,6 +46,7 @@ clipstash/
 3. Tag articles with auto-suggestions (HTML meta tags + existing vocabulary matching)
 4. Full-text search across saved content (FTS5)
 5. Clean, minimal reader UI
+6. Browser extension (Manifest V3) — right-click to save pages (Chrome + Firefox)
 
 ## Development
 
@@ -63,7 +65,8 @@ cargo test --workspace
 3. Use only trusted crates
 4. Add small features and add tests for these features
    1. Testing policy: high value tests only
-5. Use KISS, YAGNI and SOLID principles”
+5. Use KISS, YAGNI and SOLID principles
 6. Track a todo in TODO.md
 7. Keep CLAUDE.md up to date, but keep it short and compact
-8. Create a README.md and keep it up to date
+8. Keep the README.md up to date
+9. Check project security with `cargo audit`

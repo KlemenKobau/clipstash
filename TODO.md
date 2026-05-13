@@ -13,6 +13,11 @@
 - [ ] Handle duplicate URL submissions gracefully
 - [ ] Add pagination to article list
 
+## Done
+
+- [x] Browser extension (Manifest V3) — right-click context menu to save pages
+- [x] CORS support on API routes for extension access
+
 ## Future Enhancements
 
 - [ ] Keyword/TF-IDF extraction for tag inference (e.g. rake crate)

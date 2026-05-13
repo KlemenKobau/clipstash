@@ -10,6 +10,7 @@ A self-hosted web article clipper built entirely in Rust. Paste a URL, and Clips
 - **Tag filtering** — click any tag to filter your reading list
 - **Clean reader view** — distraction-free article reading with responsive typography
 - **JSON API** — full CRUD API at `/api/articles` for programmatic access
+- **Browser extension** — right-click any page to save it (Chrome + Firefox, Manifest V3)
 
 ## Tech Stack
 
@@ -61,6 +62,23 @@ cargo test --workspace
 | PUT | `/api/articles/{id}/tags` | Update tags (`{"tags": [...]}`) |
 | DELETE | `/api/articles/{id}` | Delete article |
 
+## Browser Extension
+
+The `extension/` directory contains a Manifest V3 browser extension for Chrome and Firefox.
+
+### Install (Firefox)
+
+1. Open `about:debugging#/runtime/this-firefox`
+2. Click **Load Temporary Add-on** and select `extension/manifest.json`
+
+### Install (Chrome)
+
+1. Open `chrome://extensions`
+2. Enable **Developer mode**
+3. Click **Load unpacked** and select the `extension/` directory
+
+Right-click any page and choose **Save to Clipstash**. Configure the server URL in the extension options (defaults to `http://localhost:3000`).
+
 ## Project Structure
 
 ```
@@ -69,6 +87,7 @@ clipstash/
 │   ├── server/       # Axum backend (API + HTML pages + extractor + tag suggestions)
 │   ├── frontend/     # Askama templates
 │   └── shared/       # Shared types, models, errors
+├── extension/        # Browser extension (Manifest V3)
 ├── migrations/       # SQLite migrations
 └── static/           # CSS
 ```
