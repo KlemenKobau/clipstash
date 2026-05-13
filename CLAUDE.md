@@ -77,4 +77,4 @@ docker compose up -d
 8. Keep the README.md up to date
 9. Check project security with `cargo audit`
 10. Always run `cargo fmt --all` before committing
-11. Run `cargo clippy --workspace` after implementations; fix errors only (warnings are informational)
+11. Run `cargo clippy --workspace -- -A warnings` after implementations (errors only; CI checks warnings separately)
