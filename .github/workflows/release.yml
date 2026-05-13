@@ -28,7 +28,8 @@ jobs:
         if: always()
         continue-on-error: true
         run: |
-          cargo install cargo-audit
+          curl -fsSL https://raw.githubusercontent.com/cargo-bins/cargo-binstall/main/install-from-binstall-release.sh | bash
+          cargo binstall --no-confirm cargo-audit
           if ! cargo audit; then
             echo "::warning::Security audit found vulnerabilities. Run 'cargo audit' to review."
           fi
