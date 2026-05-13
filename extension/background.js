@@ -13,16 +13,16 @@ api.contextMenus.onClicked.addListener(async (info, tab) => {
   const url = tab.url;
   if (!url) return;
 
+  const result = await api.storage.local.get(["serverUrl", "apiKey"]);
+  const base = result.serverUrl || DEFAULT_SERVER_URL;
+  const apiKey = result.apiKey || "";
+
+  if (!apiKey) {
+    api.runtime.openOptionsPage();
+    return;
+  }
+
   try {
-    const result = await api.storage.local.get(["serverUrl", "apiKey"]);
-    const base = result.serverUrl || DEFAULT_SERVER_URL;
-    const apiKey = result.apiKey || "";
-
-    if (!apiKey) {
-      notify("Not configured", "Set your API key in the Clipstash extension options.");
-      return;
-    }
-
     const response = await fetch(`${base}/api/articles`, {
       method: "POST",
       headers: {
@@ -33,26 +33,44 @@ api.contextMenus.onClicked.addListener(async (info, tab) => {
     });
 
     if (response.ok) {
-      const article = await response.json();
-      notify("Saved!", `"${article.title}" saved to Clipstash.`);
+      notify(tab.id, "success", "Saved to Clipstash!");
     } else if (response.status === 401) {
-      notify("Unauthorized", "Check your API key in the Clipstash extension options.");
+      notify(tab.id, "error", "Clipstash: invalid API key.");
     } else {
       const text = await response.text();
-      notify("Save failed", text || `Server returned ${response.status}`);
+      notify(tab.id, "error", `Clipstash: ${text || `server error ${response.status}`}`);
     }
   } catch (err) {
-    notify(
-      "Connection error",
-      `Could not reach Clipstash server. ${err.message}`
-    );
+    notify(tab.id, "error", `Clipstash: could not reach server. ${err.message}`);
   }
 });
 
-function notify(title, message) {
-  api.notifications.create({
-    type: "basic",
-    title,
-    message,
+function notify(tabId, type, message) {
+  api.scripting.executeScript({
+    target: { tabId },
+    func: (type, message) => {
+      const el = document.createElement("div");
+      el.textContent = message;
+      Object.assign(el.style, {
+        position: "fixed",
+        top: "16px",
+        right: "16px",
+        zIndex: "2147483647",
+        padding: "10px 16px",
+        borderRadius: "6px",
+        fontFamily: "sans-serif",
+        fontSize: "14px",
+        color: "#fff",
+        background: type === "success" ? "#2563eb" : "#dc2626",
+        boxShadow: "0 2px 8px rgba(0,0,0,0.3)",
+        transition: "opacity 0.4s",
+      });
+      document.body.appendChild(el);
+      setTimeout(() => {
+        el.style.opacity = "0";
+        setTimeout(() => el.remove(), 400);
+      }, 3000);
+    },
+    args: [type, message],
   });
 }

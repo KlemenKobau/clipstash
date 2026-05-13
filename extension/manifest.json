@@ -3,9 +3,17 @@
   "name": "Clipstash",
   "version": "0.1.0",
   "description": "Save web pages to your Clipstash instance with one click.",
-  "permissions": ["contextMenus", "storage", "notifications"],
+  "permissions": [
+    "contextMenus",
+    "storage",
+    "activeTab",
+    "scripting"
+  ],
   "background": {
-    "service_worker": "background.js"
+    "service_worker": "background.js",
+    "scripts": [
+      "background.js"
+    ]
   },
   "options_ui": {
     "page": "options.html",
