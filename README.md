@@ -100,6 +100,8 @@ The `extension/` directory contains a Manifest V3 browser extension for Chrome a
 
 Right-click any page and choose **Save to Clipstash**. Configure the server URL in the extension options (defaults to `http://localhost:3000`).
 
+Pre-built extension zips are available on the [Releases](../../releases) page — download and load as above.
+
 ## Project Structure
 
 ```

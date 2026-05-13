@@ -24,6 +24,7 @@
 - [x] Docker Compose for local deployment
 - [x] GitHub Actions CI/CD pipeline (test + build + push to GHCR)
 - [x] Configurable bind address (`CLIPSTASH_HOST`, `CLIPSTASH_PORT`)
+- [x] Release workflow: extension zip attached to GitHub Releases on tag push
 
 ## Future Enhancements
 
