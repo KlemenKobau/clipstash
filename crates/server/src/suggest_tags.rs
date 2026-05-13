@@ -9,7 +9,7 @@ pub fn extract_meta_tags(html: &str) -> Vec<String> {
     let mut tags = Vec::new();
 
     // meta name="keywords" — comma-separated list
-    if let Some(sel) = scraper::Selector::parse(r#"meta[name="keywords"]"#).ok() {
+    if let Ok(sel) = scraper::Selector::parse(r#"meta[name="keywords"]"#) {
         for el in document.select(&sel) {
             if let Some(content) = el.value().attr("content") {
                 tags.extend(split_and_clean(content, ','));
@@ -18,7 +18,7 @@ pub fn extract_meta_tags(html: &str) -> Vec<String> {
     }
 
     // meta name="news_keywords" — comma-separated
-    if let Some(sel) = scraper::Selector::parse(r#"meta[name="news_keywords"]"#).ok() {
+    if let Ok(sel) = scraper::Selector::parse(r#"meta[name="news_keywords"]"#) {
         for el in document.select(&sel) {
             if let Some(content) = el.value().attr("content") {
                 tags.extend(split_and_clean(content, ','));
@@ -27,7 +27,7 @@ pub fn extract_meta_tags(html: &str) -> Vec<String> {
     }
 
     // meta property="article:tag" — one per tag (Open Graph)
-    if let Some(sel) = scraper::Selector::parse(r#"meta[property="article:tag"]"#).ok() {
+    if let Ok(sel) = scraper::Selector::parse(r#"meta[property="article:tag"]"#) {
         for el in document.select(&sel) {
             if let Some(content) = el.value().attr("content") {
                 let trimmed = content.trim().to_lowercase();
@@ -39,7 +39,7 @@ pub fn extract_meta_tags(html: &str) -> Vec<String> {
     }
 
     // Extract from <meta name="description"> — split into candidate words
-    if let Some(sel) = scraper::Selector::parse(r#"meta[name="description"]"#).ok() {
+    if let Ok(sel) = scraper::Selector::parse(r#"meta[name="description"]"#) {
         for el in document.select(&sel) {
             if let Some(content) = el.value().attr("content") {
                 tags.extend(extract_keywords_from_text(content));
@@ -48,12 +48,12 @@ pub fn extract_meta_tags(html: &str) -> Vec<String> {
     }
 
     // Extract from og:description as fallback
-    if tags.is_empty() {
-        if let Some(sel) = scraper::Selector::parse(r#"meta[property="og:description"]"#).ok() {
-            for el in document.select(&sel) {
-                if let Some(content) = el.value().attr("content") {
-                    tags.extend(extract_keywords_from_text(content));
-                }
+    if tags.is_empty()
+        && let Ok(sel) = scraper::Selector::parse(r#"meta[property="og:description"]"#)
+    {
+        for el in document.select(&sel) {
+            if let Some(content) = el.value().attr("content") {
+                tags.extend(extract_keywords_from_text(content));
             }
         }
     }

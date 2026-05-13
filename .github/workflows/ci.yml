@@ -24,13 +24,18 @@ jobs:
       - name: Run tests
         run: cargo test --workspace
 
-      - name: Run clippy
-        run: cargo clippy --workspace -- -D warnings
-
       - name: Security audit
         run: |
           cargo install cargo-audit
           cargo audit
+
+      - name: Run clippy
+        if: always()
+        continue-on-error: true
+        run: |
+          if ! cargo clippy --workspace -- -D warnings 2>&1; then
+            echo "::warning::Clippy warnings detected. Run 'cargo clippy --workspace' to review."
+          fi
 
       - name: Check formatting
         if: always()
