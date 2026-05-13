@@ -278,6 +278,7 @@ dependencies = [
  "chrono",
  "clipstash-frontend",
  "clipstash-shared",
+ "dotenvy",
  "readability",
  "reqwest 0.12.28",
  "scraper",

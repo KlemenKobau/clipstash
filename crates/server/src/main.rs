@@ -7,6 +7,9 @@ use tower_sessions::{MemoryStore, SessionManagerLayer};
 
 #[tokio::main]
 async fn main() -> anyhow::Result<()> {
+    // Load .env if present (optional).
+    let _ = dotenvy::dotenv();
+
     let database_url =
         std::env::var("DATABASE_URL").unwrap_or_else(|_| "sqlite:clipstash.db?mode=rwc".into());
 

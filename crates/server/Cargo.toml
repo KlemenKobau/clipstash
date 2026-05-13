@@ -21,5 +21,6 @@ tower-http = { version = "0.6", features = ["fs", "cors"] }
 tower-sessions = { version = "0.14", features = ["memory-store"] }
 url = "2"
 anyhow = "1"
+dotenvy = "0.15"
 askama = "0.13"
 subtle = "2"
