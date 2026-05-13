@@ -84,6 +84,12 @@ pub async fn search_articles(
     pool: &SqlitePool,
     query: &str,
 ) -> Result<Vec<ArticleSummary>, ClipstashError> {
+    // Append * to each token for prefix matching (supports partial/as-you-type search)
+    let prefix_query = query
+        .split_whitespace()
+        .map(|token| format!("{token}*"))
+        .collect::<Vec<_>>()
+        .join(" ");
     let rows = sqlx::query_as::<_, DbArticleSummary>(
         "SELECT a.id, a.url, a.title, a.domain, a.excerpt, a.created_at
          FROM articles a
@@ -91,7 +97,7 @@ pub async fn search_articles(
          WHERE articles_fts MATCH ?
          ORDER BY rank",
     )
-    .bind(query)
+    .bind(prefix_query)
     .fetch_all(pool)
     .await
     .map_err(|e| ClipstashError::DatabaseError(e.to_string()))?;

@@ -151,6 +151,26 @@ async fn full_text_search_finds_matching_articles() {
 }
 
 #[tokio::test]
+async fn full_text_search_matches_partial_prefix() {
+    let pool = setup_db().await;
+
+    let a1 = make_article("https://example.com/1", "Rust Programming", vec![]);
+    let a2 = make_article("https://example.com/2", "Cooking Recipes", vec![]);
+    db::insert_article(&pool, &a1).await.unwrap();
+    db::insert_article(&pool, &a2).await.unwrap();
+
+    // "Prog" should match "Programming"
+    let results = db::search_articles(&pool, "Prog").await.unwrap();
+    assert_eq!(results.len(), 1);
+    assert_eq!(results[0].title, "Rust Programming");
+
+    // "Coo" should match "Cooking"
+    let results = db::search_articles(&pool, "Coo").await.unwrap();
+    assert_eq!(results.len(), 1);
+    assert_eq!(results[0].title, "Cooking Recipes");
+}
+
+#[tokio::test]
 async fn delete_article_cascades_to_tags() {
     let pool = setup_db().await;
 
