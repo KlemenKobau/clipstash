@@ -17,8 +17,27 @@
 {% endif %}
 
 <form class="search-form" method="get" action="/">
-    <input type="search" name="q" placeholder="Search articles..." value="{{ search }}" />
+    <input type="search" name="q" placeholder="Search articles..." value="{{ search }}"
+           id="search-input" autocomplete="off" />
 </form>
+<script>
+(function () {
+    var input = document.getElementById('search-input');
+    var timer;
+    input.addEventListener('input', function () {
+        clearTimeout(timer);
+        timer = setTimeout(function () {
+            var params = new URLSearchParams(window.location.search);
+            if (input.value) {
+                params.set('q', input.value);
+            } else {
+                params.delete('q');
+            }
+            window.location.replace('/?' + params.toString());
+        }, 300);
+    });
+})();
+</script>
 
 {% if articles.is_empty() %}
 <p class="empty">No articles yet. Clip your first URL above!</p>
