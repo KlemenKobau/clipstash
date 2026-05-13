@@ -1,7 +1,9 @@
-use axum::{Router, http, routing};
+use axum::{Router, http, middleware, routing};
+use clipstash_server::auth::{AppState, AuthConfig};
 use sqlx::sqlite::SqlitePoolOptions;
 use tower_http::cors::{Any, CorsLayer};
 use tower_http::services::ServeDir;
+use tower_sessions::{MemoryStore, SessionManagerLayer};
 
 #[tokio::main]
 async fn main() -> anyhow::Result<()> {
@@ -22,7 +24,16 @@ async fn main() -> anyhow::Result<()> {
         .await
         .map_err(|e| anyhow::anyhow!(e))?;
 
-    // CORS for browser extension access
+    let state = AppState {
+        pool,
+        auth: AuthConfig::from_env(),
+    };
+
+    // In-memory session store (sessions are lost on restart)
+    let session_store = MemoryStore::default();
+    let session_layer = SessionManagerLayer::new(session_store).with_secure(false);
+
+    // CORS for browser extension access — include Authorization header
     let cors = CorsLayer::new()
         .allow_origin(Any)
         .allow_methods([
@@ -31,9 +42,9 @@ async fn main() -> anyhow::Result<()> {
             http::Method::PUT,
             http::Method::DELETE,
         ])
-        .allow_headers([http::header::CONTENT_TYPE]);
+        .allow_headers([http::header::CONTENT_TYPE, http::header::AUTHORIZATION]);
 
-    // JSON API routes
+    // JSON API routes — protected by API key
     let api_routes = Router::new()
         .route(
             "/articles",
@@ -55,10 +66,23 @@ async fn main() -> anyhow::Result<()> {
             "/articles/{id}/tags",
             routing::put(clipstash_server::routes::update_tags),
         )
+        .layer(middleware::from_fn_with_state(
+            state.clone(),
+            clipstash_server::auth::require_api_key,
+        ))
         .layer(cors);
 
-    // HTML page routes
-    let page_routes = Router::new()
+    // Public routes — no session required
+    let public_routes = Router::new()
+        .route("/login", routing::get(clipstash_server::pages::login_page))
+        .route(
+            "/login",
+            routing::post(clipstash_server::pages::login_submit),
+        )
+        .route("/logout", routing::post(clipstash_server::pages::logout));
+
+    // Protected HTML page routes — require valid session
+    let protected_routes = Router::new()
         .route("/", routing::get(clipstash_server::pages::index))
         .route(
             "/preview-clip",
@@ -75,13 +99,16 @@ async fn main() -> anyhow::Result<()> {
         .route(
             "/article/{id}/delete",
             routing::post(clipstash_server::pages::delete_article),
-        );
+        )
+        .layer(middleware::from_fn(clipstash_server::auth::require_session));
 
     let app = Router::new()
-        .merge(page_routes)
+        .merge(public_routes)
+        .merge(protected_routes)
         .nest("/api", api_routes)
         .nest_service("/static", ServeDir::new("static"))
-        .with_state(pool);
+        .layer(session_layer)
+        .with_state(state);
 
     let host: std::net::IpAddr = std::env::var("CLIPSTASH_HOST")
         .unwrap_or_else(|_| "127.0.0.1".into())

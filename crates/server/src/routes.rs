@@ -5,17 +5,16 @@ use axum::{
     response::IntoResponse,
 };
 use clipstash_shared::models::{CreateArticleRequest, SearchQuery, UpdateTagsRequest};
-use sqlx::sqlite::SqlitePool;
 use uuid::Uuid;
 
-use crate::{db, extractor};
+use crate::{auth::AppState, db, extractor};
 
 pub async fn create_article(
-    State(pool): State<SqlitePool>,
+    State(state): State<AppState>,
     Json(req): Json<CreateArticleRequest>,
 ) -> impl IntoResponse {
     match extractor::fetch_and_extract(&req.url, req.tags).await {
-        Ok(article) => match db::insert_article(&pool, &article).await {
+        Ok(article) => match db::insert_article(&state.pool, &article).await {
             Ok(()) => (StatusCode::CREATED, Json(serde_json::json!(article))),
             Err(e) => (
                 StatusCode::INTERNAL_SERVER_ERROR,
@@ -29,11 +28,8 @@ pub async fn create_article(
     }
 }
 
-pub async fn get_article(
-    State(pool): State<SqlitePool>,
-    Path(id): Path<Uuid>,
-) -> impl IntoResponse {
-    match db::get_article(&pool, id).await {
+pub async fn get_article(State(state): State<AppState>, Path(id): Path<Uuid>) -> impl IntoResponse {
+    match db::get_article(&state.pool, id).await {
         Ok(article) => (StatusCode::OK, Json(serde_json::json!(article))),
         Err(clipstash_shared::error::ClipstashError::NotFound) => (
             StatusCode::NOT_FOUND,
@@ -47,13 +43,13 @@ pub async fn get_article(
 }
 
 pub async fn list_articles(
-    State(pool): State<SqlitePool>,
+    State(state): State<AppState>,
     Query(search): Query<SearchQuery>,
 ) -> impl IntoResponse {
     let result = match (&search.q, &search.tag) {
-        (Some(q), _) if !q.is_empty() => db::search_articles(&pool, q).await,
-        (_, Some(tag)) if !tag.is_empty() => db::search_by_tag(&pool, tag).await,
-        _ => db::list_articles(&pool).await,
+        (Some(q), _) if !q.is_empty() => db::search_articles(&state.pool, q).await,
+        (_, Some(tag)) if !tag.is_empty() => db::search_by_tag(&state.pool, tag).await,
+        _ => db::list_articles(&state.pool).await,
     };
 
     match result {
@@ -66,11 +62,11 @@ pub async fn list_articles(
 }
 
 pub async fn update_tags(
-    State(pool): State<SqlitePool>,
+    State(state): State<AppState>,
     Path(id): Path<Uuid>,
     Json(req): Json<UpdateTagsRequest>,
 ) -> impl IntoResponse {
-    match db::update_tags(&pool, id, &req.tags).await {
+    match db::update_tags(&state.pool, id, &req.tags).await {
         Ok(()) => StatusCode::NO_CONTENT.into_response(),
         Err(clipstash_shared::error::ClipstashError::NotFound) => (
             StatusCode::NOT_FOUND,
@@ -86,10 +82,10 @@ pub async fn update_tags(
 }
 
 pub async fn delete_article(
-    State(pool): State<SqlitePool>,
+    State(state): State<AppState>,
     Path(id): Path<Uuid>,
 ) -> impl IntoResponse {
-    match db::delete_article(&pool, id).await {
+    match db::delete_article(&state.pool, id).await {
         Ok(()) => StatusCode::NO_CONTENT.into_response(),
         Err(clipstash_shared::error::ClipstashError::NotFound) => (
             StatusCode::NOT_FOUND,

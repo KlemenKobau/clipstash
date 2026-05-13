@@ -18,6 +18,8 @@ thiserror = { workspace = true }
 readability = "0.3"
 scraper = "0.22"
 tower-http = { version = "0.6", features = ["fs", "cors"] }
+tower-sessions = { version = "0.14", features = ["memory-store"] }
 url = "2"
 anyhow = "1"
 askama = "0.13"
+subtle = "2"

@@ -32,3 +32,9 @@ pub struct ConfirmClipTemplate {
 pub struct ErrorTemplate {
     pub message: String,
 }
+
+#[derive(Template)]
+#[template(path = "login.html")]
+pub struct LoginTemplate {
+    pub error: Option<String>,
+}

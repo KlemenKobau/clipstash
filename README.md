@@ -55,9 +55,19 @@ docker run -p 3000:3000 -v clipstash-data:/home/clipstash/data clipstash
 
 | Variable | Default | Description |
 |----------|---------|-------------|
+| `CLIPSTASH_USER` | *(required)* | Web UI login username |
+| `CLIPSTASH_PASSWORD` | *(required)* | Web UI login password |
+| `CLIPSTASH_API_KEY` | *(required)* | API key for extension and API access |
 | `DATABASE_URL` | `sqlite:clipstash.db?mode=rwc` | SQLite connection string |
 | `CLIPSTASH_HOST` | `127.0.0.1` | Bind address (`0.0.0.0` for containers) |
 | `CLIPSTASH_PORT` | `3000` | Listen port |
+
+### Security
+
+- The web UI requires username + password login (session cookie, lost on restart)
+- All `/api/*` routes require `Authorization: Bearer <CLIPSTASH_API_KEY>`
+- Passwords and API keys are compared in constant time to prevent timing attacks
+- The browser extension stores the API key in extension local storage and sends it on every request
 
 ### Test
 

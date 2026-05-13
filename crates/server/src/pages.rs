@@ -1,26 +1,30 @@
 use axum::{
     Form,
     extract::{Path, Query, State},
+    http::StatusCode,
     response::{Html, IntoResponse, Redirect},
 };
 use clipstash_frontend::templates::{
-    ArticleTemplate, ConfirmClipTemplate, ErrorTemplate, IndexTemplate,
+    ArticleTemplate, ConfirmClipTemplate, ErrorTemplate, IndexTemplate, LoginTemplate,
 };
 use clipstash_shared::models::SearchQuery;
 use serde::Deserialize;
-use sqlx::sqlite::SqlitePool;
+use tower_sessions::Session;
 use uuid::Uuid;
 
-use crate::{db, extractor, suggest_tags};
+use crate::{
+    auth::{AppState, SESSION_KEY},
+    db, extractor, suggest_tags,
+};
 
 pub async fn index(
-    State(pool): State<SqlitePool>,
+    State(state): State<AppState>,
     Query(search): Query<SearchQuery>,
 ) -> impl IntoResponse {
     let result = match (&search.q, &search.tag) {
-        (Some(q), _) if !q.is_empty() => db::search_articles(&pool, q).await,
-        (_, Some(tag)) if !tag.is_empty() => db::search_by_tag(&pool, tag).await,
-        _ => db::list_articles(&pool).await,
+        (Some(q), _) if !q.is_empty() => db::search_articles(&state.pool, q).await,
+        (_, Some(tag)) if !tag.is_empty() => db::search_by_tag(&state.pool, tag).await,
+        _ => db::list_articles(&state.pool).await,
     };
 
     match result {
@@ -49,7 +53,7 @@ pub struct PreviewForm {
 }
 
 pub async fn preview_clip(
-    State(pool): State<SqlitePool>,
+    State(state): State<AppState>,
     Form(form): Form<PreviewForm>,
 ) -> impl IntoResponse {
     let content = match extractor::fetch_and_parse(&form.url).await {
@@ -57,7 +61,7 @@ pub async fn preview_clip(
         Err(e) => return error_page(&e.to_string()),
     };
 
-    let existing_tags = suggest_tags::get_all_existing_tags(&pool)
+    let existing_tags = suggest_tags::get_all_existing_tags(&state.pool)
         .await
         .unwrap_or_default();
 
@@ -81,7 +85,7 @@ pub struct ClipForm {
 }
 
 pub async fn clip_article(
-    State(pool): State<SqlitePool>,
+    State(state): State<AppState>,
     Form(form): Form<ClipForm>,
 ) -> impl IntoResponse {
     let tags: Vec<String> = form
@@ -92,7 +96,7 @@ pub async fn clip_article(
         .collect();
 
     match extractor::fetch_and_extract(&form.url, tags).await {
-        Ok(article) => match db::insert_article(&pool, &article).await {
+        Ok(article) => match db::insert_article(&state.pool, &article).await {
             Ok(()) => Redirect::to("/").into_response(),
             Err(e) => error_page(&e.to_string()),
         },
@@ -101,10 +105,10 @@ pub async fn clip_article(
 }
 
 pub async fn view_article(
-    State(pool): State<SqlitePool>,
+    State(state): State<AppState>,
     Path(id): Path<Uuid>,
 ) -> impl IntoResponse {
-    match db::get_article(&pool, id).await {
+    match db::get_article(&state.pool, id).await {
         Ok(article) => {
             let template = ArticleTemplate { article };
             Html(template.to_string()).into_response()
@@ -114,10 +118,10 @@ pub async fn view_article(
 }
 
 pub async fn delete_article(
-    State(pool): State<SqlitePool>,
+    State(state): State<AppState>,
     Path(id): Path<Uuid>,
 ) -> impl IntoResponse {
-    match db::delete_article(&pool, id).await {
+    match db::delete_article(&state.pool, id).await {
         Ok(()) => Redirect::to("/").into_response(),
         Err(e) => error_page(&e.to_string()),
     }
@@ -128,4 +132,41 @@ fn error_page(message: &str) -> axum::response::Response {
         message: message.to_string(),
     };
     Html(template.to_string()).into_response()
+}
+
+pub async fn login_page() -> impl IntoResponse {
+    Html(LoginTemplate { error: None }.to_string())
+}
+
+#[derive(Deserialize)]
+pub struct LoginForm {
+    pub username: String,
+    pub password: String,
+}
+
+pub async fn login_submit(
+    State(state): State<AppState>,
+    session: Session,
+    Form(form): Form<LoginForm>,
+) -> impl IntoResponse {
+    if state.auth.verify_password(&form.username, &form.password) {
+        session.insert(SESSION_KEY, true).await.ok();
+        Redirect::to("/").into_response()
+    } else {
+        (
+            StatusCode::UNAUTHORIZED,
+            Html(
+                LoginTemplate {
+                    error: Some("Invalid username or password.".into()),
+                }
+                .to_string(),
+            ),
+        )
+            .into_response()
+    }
+}
+
+pub async fn logout(session: Session) -> impl IntoResponse {
+    session.flush().await.ok();
+    Redirect::to("/login").into_response()
 }

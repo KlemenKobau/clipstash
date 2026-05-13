@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Clipstash — Login</title>
+    <link rel="stylesheet" href="/static/style.css" />
+</head>
+<body>
+    <main class="container" style="max-width: 360px; margin-top: 4rem;">
+        <h1 class="logo" style="text-align:center; margin-bottom: 1.5rem;">Clipstash</h1>
+        {% if let Some(msg) = error %}
+        <div class="flash error">{{ msg }}</div>
+        {% endif %}
+        <form method="post" action="/login">
+            <div style="margin-bottom: 1rem;">
+                <label for="username">Username</label>
+                <input type="text" id="username" name="username" required autofocus
+                       style="width:100%; margin-top: 0.25rem;" />
+            </div>
+            <div style="margin-bottom: 1rem;">
+                <label for="password">Password</label>
+                <input type="password" id="password" name="password" required
+                       style="width:100%; margin-top: 0.25rem;" />
+            </div>
+            <button type="submit" style="width:100%;">Login</button>
+        </form>
+    </main>
+</body>
+</html>

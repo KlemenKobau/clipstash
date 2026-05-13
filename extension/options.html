@@ -10,6 +10,7 @@
       }
       label {
         display: block;
+        margin-top: 12px;
         margin-bottom: 4px;
         font-weight: 600;
       }
@@ -29,11 +30,11 @@
   </head>
   <body>
     <label for="server-url">Clipstash Server URL</label>
-    <input
-      type="url"
-      id="server-url"
-      placeholder="http://localhost:3000"
-    />
+    <input type="url" id="server-url" placeholder="http://localhost:3000" />
+
+    <label for="api-key">API Key</label>
+    <input type="password" id="api-key" placeholder="Your CLIPSTASH_API_KEY" />
+
     <div class="status" id="status"></div>
     <script src="options.js"></script>
   </body>

@@ -50,6 +50,7 @@ clipstash/
 4. Full-text search: live as-you-type (no page reload), prefix matching, implicit AND, `AND`/`OR`/`-word` operators; query sanitized in `db::build_fts5_query` before binding
 5. Clean, minimal reader UI
 6. Browser extension (Manifest V3) — right-click to save pages (Chrome + Firefox); rolling `latest-dev` pre-release built on every push to `main`
+7. Authentication: web UI uses username+password session login; API uses `Authorization: Bearer` key; constant-time comparisons via `subtle` crate; config via `CLIPSTASH_USER`, `CLIPSTASH_PASSWORD`, `CLIPSTASH_API_KEY` env vars (all required)
 
 ## Development
 

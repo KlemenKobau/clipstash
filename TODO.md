@@ -23,10 +23,9 @@
 
 ## Security (public VM hosting)
 
-- [ ] **Authentication** — protect all routes with an API key (`CLIPSTASH_API_KEY` env var); send as `Authorization: Bearer <key>` header or session cookie for the web UI
+- [x] **Authentication** — web UI protected with username+password session login; API routes require `Authorization: Bearer <CLIPSTASH_API_KEY>`; constant-time comparisons
+- [x] **Extension auth** — extension stores and sends API key via options page
 - [ ] **HTTPS** — document (or automate) TLS termination; add Caddy/nginx reverse proxy config to `docker-compose.yml`; update extension to support `https://` server URLs
-- [ ] **Extension auth** — store and send the API key from the extension options page on every request
-- [ ] **Secure defaults** — bind to `127.0.0.1` by default (already done); document that `0.0.0.0` should only be used behind a reverse proxy with TLS
 
 ## Future Enhancements
 
