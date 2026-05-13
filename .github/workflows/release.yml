@@ -24,6 +24,11 @@ jobs:
       - name: Run tests
         run: cargo test --workspace
 
+      - name: Security audit
+        run: |
+          cargo install cargo-audit
+          cargo audit
+
   build-container:
     needs: test
     runs-on: ubuntu-latest

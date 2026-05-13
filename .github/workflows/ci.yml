@@ -74,3 +74,22 @@ jobs:
           labels: ${{ steps.meta.outputs.labels }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
+
+  build-extension:
+    needs: test
+    runs-on: ubuntu-latest
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Package extension
+        run: |
+          cd extension
+          zip -r ../clipstash-extension-snapshot.zip .
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: clipstash-extension-snapshot
+          path: clipstash-extension-snapshot.zip
