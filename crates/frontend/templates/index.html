@@ -16,33 +16,16 @@
 <div class="flash success">{{ msg }}</div>
 {% endif %}
 
-<form class="search-form" method="get" action="/">
+<form class="search-form" method="get" action="/" onsubmit="return false;">
     <input type="search" name="q" placeholder="Search articles..." value="{{ search }}"
            id="search-input" autocomplete="off" />
 </form>
-<script>
-(function () {
-    var input = document.getElementById('search-input');
-    var timer;
-    input.addEventListener('input', function () {
-        clearTimeout(timer);
-        timer = setTimeout(function () {
-            var params = new URLSearchParams(window.location.search);
-            if (input.value) {
-                params.set('q', input.value);
-            } else {
-                params.delete('q');
-            }
-            window.location.replace('/?' + params.toString());
-        }, 300);
-    });
-})();
-</script>
 
+<div id="article-list-container">
 {% if articles.is_empty() %}
-<p class="empty">No articles yet. Clip your first URL above!</p>
+<p class="empty" id="empty-msg">No articles yet. Clip your first URL above!</p>
 {% else %}
-<ul class="article-list">
+<ul class="article-list" id="article-list">
     {% for a in articles %}
     <li class="article-card">
         <a href="/article/{{ a.id }}">
@@ -59,4 +42,64 @@
     {% endfor %}
 </ul>
 {% endif %}
+</div>
+
+<script>
+(function () {
+    var input = document.getElementById('search-input');
+    var container = document.getElementById('article-list-container');
+    var timer;
+
+    function renderArticles(articles) {
+        if (articles.length === 0) {
+            container.innerHTML = '<p class="empty">No articles found.</p>';
+            return;
+        }
+        var items = articles.map(function (a) {
+            var tags = (a.tags || []).map(function (t) {
+                return '<a href="/?tag=' + encodeURIComponent(t) + '" class="tag">' + escapeHtml(t) + '</a>';
+            }).join('');
+            return '<li class="article-card">'
+                + '<a href="/article/' + escapeHtml(a.id) + '">'
+                + '<h3>' + escapeHtml(a.title) + '</h3>'
+                + '<span class="domain">' + escapeHtml(a.domain) + '</span>'
+                + '</a>'
+                + '<p class="excerpt">' + escapeHtml(a.excerpt) + '</p>'
+                + '<div class="tags">' + tags + '</div>'
+                + '</li>';
+        }).join('');
+        container.innerHTML = '<ul class="article-list">' + items + '</ul>';
+    }
+
+    function escapeHtml(str) {
+        return String(str)
+            .replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;')
+            .replace(/"/g, '&quot;');
+    }
+
+    function fetchArticles(q) {
+        var url = '/api/articles';
+        if (q) { url += '?q=' + encodeURIComponent(q); }
+        fetch(url)
+            .then(function (r) { return r.json(); })
+            .then(renderArticles);
+    }
+
+    input.addEventListener('input', function () {
+        clearTimeout(timer);
+        timer = setTimeout(function () {
+            var params = new URLSearchParams(window.location.search);
+            if (input.value) {
+                params.set('q', input.value);
+            } else {
+                params.delete('q');
+            }
+            history.replaceState(null, '', '/?' + params.toString());
+            fetchArticles(input.value);
+        }, 300);
+    });
+})();
+</script>
 {% endblock %}
