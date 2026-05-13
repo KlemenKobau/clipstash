@@ -30,13 +30,34 @@ A self-hosted web article clipper built entirely in Rust. Paste a URL, and Clips
 - Rust 1.85+ (2024 edition)
 - SQLite 3
 
-### Run
+### Run (local)
 
 ```sh
 cargo run -p clipstash-server
 ```
 
 The server starts at [http://localhost:3000](http://localhost:3000). A SQLite database (`clipstash.db`) is created automatically.
+
+### Run (Docker)
+
+```sh
+docker compose up -d
+```
+
+Or build and run manually:
+
+```sh
+docker build -t clipstash .
+docker run -p 3000:3000 -v clipstash-data:/home/clipstash/data clipstash
+```
+
+### Environment Variables
+
+| Variable | Default | Description |
+|----------|---------|-------------|
+| `DATABASE_URL` | `sqlite:clipstash.db?mode=rwc` | SQLite connection string |
+| `CLIPSTASH_HOST` | `127.0.0.1` | Bind address (`0.0.0.0` for containers) |
+| `CLIPSTASH_PORT` | `3000` | Listen port |
 
 ### Test
 
@@ -89,7 +110,10 @@ clipstash/
 │   └── shared/       # Shared types, models, errors
 ├── extension/        # Browser extension (Manifest V3)
 ├── migrations/       # SQLite migrations
-└── static/           # CSS
+├── static/           # CSS
+├── .github/workflows # CI/CD pipeline
+├── Dockerfile        # Multi-stage container build
+└── docker-compose.yml
 ```
 
 ## License

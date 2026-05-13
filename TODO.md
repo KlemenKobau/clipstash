@@ -18,6 +18,13 @@
 - [x] Browser extension (Manifest V3) — right-click context menu to save pages
 - [x] CORS support on API routes for extension access
 
+## Done
+
+- [x] Docker container with multi-stage build
+- [x] Docker Compose for local deployment
+- [x] GitHub Actions CI/CD pipeline (test + build + push to GHCR)
+- [x] Configurable bind address (`CLIPSTASH_HOST`, `CLIPSTASH_PORT`)
+
 ## Future Enhancements
 
 - [ ] Keyword/TF-IDF extraction for tag inference (e.g. rake crate)

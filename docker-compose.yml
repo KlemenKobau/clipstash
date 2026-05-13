@@ -1,0 +1,15 @@
+services:
+  clipstash:
+    build: .
+    ports:
+      - "3000:3000"
+    volumes:
+      - clipstash-data:/home/clipstash/data
+    environment:
+      - DATABASE_URL=sqlite:/home/clipstash/data/clipstash.db?mode=rwc
+      - CLIPSTASH_HOST=0.0.0.0
+      - CLIPSTASH_PORT=3000
+    restart: unless-stopped
+
+volumes:
+  clipstash-data:

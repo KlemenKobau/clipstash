@@ -58,7 +58,15 @@ async fn main() -> anyhow::Result<()> {
         .nest_service("/static", ServeDir::new("static"))
         .with_state(pool);
 
-    let addr = std::net::SocketAddr::from(([127, 0, 0, 1], 3000));
+    let host: std::net::IpAddr = std::env::var("CLIPSTASH_HOST")
+        .unwrap_or_else(|_| "127.0.0.1".into())
+        .parse()
+        .expect("Invalid CLIPSTASH_HOST");
+    let port: u16 = std::env::var("CLIPSTASH_PORT")
+        .unwrap_or_else(|_| "3000".into())
+        .parse()
+        .expect("Invalid CLIPSTASH_PORT");
+    let addr = std::net::SocketAddr::from((host, port));
     println!("Listening on http://{addr}");
 
     let listener = tokio::net::TcpListener::bind(addr).await?;
