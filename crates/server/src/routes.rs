@@ -13,16 +13,29 @@ pub async fn create_article(
     State(state): State<AppState>,
     Json(req): Json<CreateArticleRequest>,
 ) -> impl IntoResponse {
-    match extractor::fetch_and_extract(&req.url, req.tags).await {
-        Ok(article) => match db::insert_article(&state.pool, &article).await {
-            Ok(()) => (StatusCode::CREATED, Json(serde_json::json!(article))),
-            Err(e) => (
-                StatusCode::INTERNAL_SERVER_ERROR,
+    let content = match extractor::fetch_and_parse(&req.url).await {
+        Ok(c) => c,
+        Err(e) => {
+            return (
+                StatusCode::BAD_REQUEST,
                 Json(serde_json::json!({"error": e.to_string()})),
-            ),
-        },
+            );
+        }
+    };
+
+    let existing_tags = crate::suggest_tags::get_all_existing_tags(&state.pool)
+        .await
+        .unwrap_or_default();
+
+    let tags =
+        crate::suggest_tags::suggest_tags(&content.raw_html, &content.text, &existing_tags).await;
+
+    let article = extractor::into_article(content, tags);
+
+    match db::insert_article(&state.pool, &article).await {
+        Ok(()) => (StatusCode::CREATED, Json(serde_json::json!(article))),
         Err(e) => (
-            StatusCode::BAD_REQUEST,
+            StatusCode::INTERNAL_SERVER_ERROR,
             Json(serde_json::json!({"error": e.to_string()})),
         ),
     }

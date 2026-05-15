@@ -18,7 +18,6 @@ pub struct Article {
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct CreateArticleRequest {
     pub url: String,
-    pub tags: Vec<String>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
