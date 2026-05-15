@@ -112,3 +112,56 @@ pub async fn delete_article(
             .into_response(),
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use crate::suggest_tags;
+
+    #[tokio::test]
+    async fn suggest_tags_used_with_empty_vocabulary() {
+        let html = r#"<html><head>
+            <meta name="keywords" content="rust, async, web">
+        </head><body><p>Article about Rust async web programming.</p></body></html>"#;
+        let text = "Article about Rust async web programming.";
+        let existing: Vec<String> = vec![];
+
+        let tags = suggest_tags::suggest_tags(html, text, &existing).await;
+
+        assert!(
+            tags.contains(&"rust".to_string()),
+            "expected 'rust' in {tags:?}"
+        );
+        assert!(
+            tags.contains(&"async".to_string()),
+            "expected 'async' in {tags:?}"
+        );
+        assert!(
+            tags.contains(&"web".to_string()),
+            "expected 'web' in {tags:?}"
+        );
+    }
+
+    #[tokio::test]
+    async fn suggest_tags_merges_vocabulary_matches() {
+        let html = r#"<html><head>
+            <meta name="keywords" content="rust">
+        </head><body><p>A deep dive into async programming with Tokio.</p></body></html>"#;
+        let text = "A deep dive into async programming with Tokio.";
+        let existing = vec!["tokio".to_string(), "python".to_string()];
+
+        let tags = suggest_tags::suggest_tags(html, text, &existing).await;
+
+        assert!(
+            tags.contains(&"rust".to_string()),
+            "expected meta tag 'rust'"
+        );
+        assert!(
+            tags.contains(&"tokio".to_string()),
+            "expected vocabulary match 'tokio'"
+        );
+        assert!(
+            !tags.contains(&"python".to_string()),
+            "python should not match"
+        );
+    }
+}
