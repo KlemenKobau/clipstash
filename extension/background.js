@@ -29,7 +29,7 @@ api.contextMenus.onClicked.addListener(async (info, tab) => {
         "Content-Type": "application/json",
         "Authorization": `Bearer ${apiKey}`,
       },
-      body: JSON.stringify({ url, tags: [] }),
+      body: JSON.stringify({ url }),
     });
 
     if (response.ok) {
